@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f4f2ec;
+  --color-card: #ffffff;
+  --color-ink: #11141b;
+  --color-ink-2: #454b58;
+  --color-muted: #626876;
+  --color-line: #e2ded4;
+  --color-line-strong: #cfc9bb;
+
+  --color-brand-red: #c82028;
+  --color-brand-red-deep: #a3181f;
+  --color-brand-red-soft: #fbeaea;
+  --color-brand-blue: #003898;
+  --color-brand-blue-deep: #002a73;
+  --color-brand-blue-soft: #e7edf8;
+
+  /* Chart mark colour: brand blue stepped into the validated lightness band. */
+  --color-chart-1: #1f4fc0;
+  --color-chart-1-wash: rgb(31 79 192 / 0.1);
+
+  --color-good: #167a45;
+  --color-good-soft: #e5f3ea;
+  --color-warn: #9a5b00;
+  --color-warn-soft: #fbf0dc;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-stretch: 118%;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 0.95;
+  }
+
+  .card {
+    background: var(--color-card);
+    border: 1px solid var(--color-line);
+    border-radius: 16px;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition:
+      transform 150ms var(--ease-out-expo),
+      background-color 150ms ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn-primary {
+    background: var(--color-brand-blue);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-blue-deep);
+  }
+  .btn-red {
+    background: var(--color-brand-red);
+    color: #fff;
+  }
+  .btn-red:hover {
+    background: var(--color-brand-red-deep);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border: 1px solid var(--color-line-strong);
+  }
+  .btn-ghost:hover {
+    background: var(--color-paper);
+  }
+
+  .rise {
+    animation: rise 600ms var(--ease-out-expo) both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes flash {
+  from {
+    background: var(--color-brand-blue-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
