@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 import { GYM } from "../data/facts";
 import { TimeMachine } from "./TimeMachine";
 import { Wordmark } from "./Wordmark";
@@ -40,6 +40,11 @@ export function AppShell({ nav }: { nav: NavItem[] }) {
                 </NavLink>
               </li>
             ))}
+            <li className="lg:mt-4 lg:border-t lg:border-line lg:pt-4">
+              <Link to="/" className="block whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-brand-blue hover:bg-paper">
+                View public website ↗
+              </Link>
+            </li>
           </ul>
         </nav>
       </aside>

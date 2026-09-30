@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
 import { dayFromDate } from "../lib/dates";
-import { addChatBooking, moveLead, type ChatBooking } from "./leads";
+import { addTrialBooking, moveLead, type TrialBooking } from "./leads";
 import { setWinback } from "./automations";
+import { recordCheckIn } from "./checkins";
 import { STATE_VERSION, createSeedState } from "./seed";
 import { advanceDays, type AdvanceSummary } from "./simulate";
 import type { DemoState, LeadStage } from "./types";
@@ -17,8 +18,9 @@ type Action =
   | { type: "advance"; days: number }
   | { type: "reset" }
   | { type: "moveLead"; leadId: string; stage: LeadStage }
-  | { type: "chatBooking"; booking: ChatBooking }
-  | { type: "setWinback"; enabled: boolean };
+  | { type: "trialBooking"; booking: TrialBooking }
+  | { type: "setWinback"; enabled: boolean }
+  | { type: "checkIn"; memberId: string; minute: number };
 
 function reducer(store: StoreState, action: Action): StoreState {
   switch (action.type) {
@@ -32,10 +34,14 @@ function reducer(store: StoreState, action: Action): StoreState {
       const demo = moveLead(store.demo, action.leadId, action.stage);
       return demo === store.demo ? store : { ...store, demo };
     }
-    case "chatBooking":
-      return { ...store, demo: addChatBooking(store.demo, action.booking) };
+    case "trialBooking":
+      return { ...store, demo: addTrialBooking(store.demo, action.booking) };
     case "setWinback":
       return { ...store, demo: setWinback(store.demo, action.enabled) };
+    case "checkIn": {
+      const demo = recordCheckIn(store.demo, action.memberId, action.minute);
+      return demo === store.demo ? store : { ...store, demo };
+    }
   }
 }
 
@@ -87,8 +93,9 @@ interface StoreActions {
   advance: (days: number) => void;
   reset: () => void;
   moveLead: (leadId: string, stage: LeadStage) => void;
-  bookFromChat: (booking: ChatBooking) => void;
+  bookTrial: (booking: TrialBooking) => void;
   setWinbackEnabled: (enabled: boolean) => void;
+  checkIn: (memberId: string, minute: number) => void;
 }
 
 interface StoreValue extends StoreActions {
@@ -112,8 +119,9 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       advance: (days) => dispatch({ type: "advance", days }),
       reset: () => dispatch({ type: "reset" }),
       moveLead: (leadId, stage) => dispatch({ type: "moveLead", leadId, stage }),
-      bookFromChat: (booking) => dispatch({ type: "chatBooking", booking }),
+      bookTrial: (booking) => dispatch({ type: "trialBooking", booking }),
       setWinbackEnabled: (enabled) => dispatch({ type: "setWinback", enabled }),
+      checkIn: (memberId, minute) => dispatch({ type: "checkIn", memberId, minute }),
     }),
     [],
   );

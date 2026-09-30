@@ -22,7 +22,7 @@ const QUICK_REPLIES = ["How much is it per month?", "What classes do you run?", 
 type AgentSource = "claude" | "scripted" | null;
 
 export function Enquiries() {
-  const { demo, bookFromChat } = useDemoStore();
+  const { demo, bookTrial } = useDemoStore();
   const [messages, setMessages] = useState<ChatBubble[]>([GREETING]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -74,7 +74,13 @@ export function Enquiries() {
       if (result.booking && !bookedRef.current) {
         bookedRef.current = true;
         setBooking({ ...result.booking, trialDay: demo.today + result.booking.daysFromToday });
-        bookFromChat(result.booking);
+        bookTrial({
+          name: result.booking.firstName,
+          source: "WhatsApp",
+          daysFromToday: result.booking.daysFromToday,
+          time: result.booking.time,
+          interest: result.booking.interest,
+        });
       }
     } finally {
       if (session === sessionRef.current) setPending(false);

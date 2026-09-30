@@ -1,7 +1,7 @@
 import { formatDay } from "../lib/dates";
 import { formatNaira } from "../lib/format";
 import { createRng } from "../lib/rng";
-import { AREAS, planById } from "../data/sample";
+import { AREAS, planById, type LeadSource } from "../data/sample";
 import { SEED, createCheckInCode, periodDays } from "./seed";
 import { pushEvent } from "./events";
 import type { DemoState, LeadStage } from "./types";
@@ -19,32 +19,36 @@ export function stageLabel(stage: LeadStage): string {
   return STAGES.find((candidate) => candidate.id === stage)?.label ?? stage;
 }
 
-export interface ChatBooking {
-  firstName: string;
+export interface TrialBooking {
+  name: string;
+  source: Extract<LeadSource, "WhatsApp" | "Website">;
   daysFromToday: number;
   time: string;
   interest: string;
+  /** Already masked for display; never store a full number in the demo. */
+  phone?: string;
 }
 
-/** A trial booked by the WhatsApp agent lands in the pipeline as a new lead at "Trial booked". */
-export function addChatBooking(state: DemoState, booking: ChatBooking): DemoState {
+/** A free trial booked by the WhatsApp agent or the website lands in the pipeline at "Trial booked". */
+export function addTrialBooking(state: DemoState, booking: TrialBooking): DemoState {
   const draft = structuredClone(state);
   const trialDay = draft.today + booking.daysFromToday;
   draft.leads.push({
     id: `l${draft.nextId++}`,
-    name: booking.firstName,
-    phone: "WhatsApp chat",
+    name: booking.name,
+    phone: booking.phone ?? `${booking.source} enquiry`,
     email: "",
-    source: "WhatsApp",
+    source: booking.source,
     interest: booking.interest || "General fitness",
     stage: "trial_booked",
     createdDay: draft.today,
     stageDay: draft.today,
     trialDay,
   });
+  const channel = booking.source === "WhatsApp" ? "the WhatsApp agent" : "the website";
   pushEvent(
     draft,
-    `${booking.firstName} booked a free trial for ${formatDay(trialDay)}${booking.time ? `, ${booking.time}` : ""} — via the WhatsApp agent`,
+    `${booking.name} booked a free trial for ${formatDay(trialDay)}${booking.time ? `, ${booking.time}` : ""} — via ${channel}`,
     "good",
   );
   return draft;
