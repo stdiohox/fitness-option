@@ -1,6 +1,6 @@
 import { monthKeyOf, type Day } from "../lib/dates";
 import { monthlyValue, planById, type LeadSource } from "../data/sample";
-import { AT_RISK_DAYS } from "./simulate";
+import { AT_RISK_DAYS } from "./automations";
 import type { DemoState, Member } from "./types";
 
 export function activeMembers(state: DemoState): Member[] {
@@ -93,4 +93,29 @@ export function visitsForLastDays(state: DemoState, days: number): { day: Day; v
     result.push({ day, visits: state.visitsByDay[day] ?? 0 });
   }
   return result;
+}
+
+export interface WinbackStats {
+  sent: number;
+  membersMessaged: number;
+  recovered: number;
+  recoveredValue: number;
+  /** Share of messaged members who came back. */
+  rate: number;
+}
+
+export function winbackStats(state: DemoState): WinbackStats {
+  const messaged = new Set(state.messages.map((message) => message.memberId));
+  // Unique people, and only those whose message is still in the log, so the rate stays a true share.
+  const recoveredMembers = new Set(
+    state.recoveries.map((recovery) => recovery.memberId).filter((memberId) => messaged.has(memberId)),
+  );
+  const recoveredValue = state.recoveries.reduce((sum, recovery) => sum + recovery.monthlyValue, 0);
+  return {
+    sent: state.messages.length,
+    membersMessaged: messaged.size,
+    recovered: recoveredMembers.size,
+    recoveredValue,
+    rate: messaged.size ? Math.min(1, recoveredMembers.size / messaged.size) : 0,
+  };
 }

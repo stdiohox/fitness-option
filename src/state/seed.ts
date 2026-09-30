@@ -10,9 +10,10 @@ import {
   planById,
   type PlanId,
 } from "../data/sample";
+import { AT_RISK_DAYS, driftingEngagement } from "./automations";
 import type { DemoState, Lead, LeadStage, Member, Payment } from "./types";
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 export const SEED = 20260930;
 export const DAYS_PER_MONTH = 30;
 /** History older than this is not needed by any screen, so it is not generated. */
@@ -48,9 +49,15 @@ export interface Person {
 }
 
 /** Invented people. Phones are masked so no generated number can belong to a real person. */
-export function createPerson(rng: Rng, serial: number): Person {
-  const first = pick(rng, FIRST_NAMES);
-  const last = pick(rng, SURNAMES);
+export function createPerson(rng: Rng, serial: number, takenNames?: Set<string>): Person {
+  let first = pick(rng, FIRST_NAMES);
+  let last = pick(rng, SURNAMES);
+  // Avoid two different people with the same name on screen; give up after a few tries.
+  for (let attempt = 0; takenNames?.has(`${first} ${last}`) && attempt < 20; attempt++) {
+    first = pick(rng, FIRST_NAMES);
+    last = pick(rng, SURNAMES);
+  }
+  takenNames?.add(`${first} ${last}`);
   return {
     name: `${first} ${last}`,
     phone: `+234 ${pick(rng, MOBILE_PREFIXES)} ••• ${String(intBetween(rng, 0, 9999)).padStart(4, "0")}`,
@@ -138,6 +145,7 @@ export function createSeedState(today: Day): DemoState {
   let nextId = 1;
   const newId = (prefix: string) => `${prefix}${nextId++}`;
   const codes = new Set<string>();
+  const names = new Set<string>();
   const members: Member[] = [];
   const payments: Payment[] = [];
 
@@ -147,10 +155,10 @@ export function createSeedState(today: Day): DemoState {
       planId,
       joinedDay: today - intBetween(rng, 3, 760),
       tenurePeriods: Math.max(1, Math.round(-Math.log(1 - rng()) * MEAN_TENURE_PERIODS[planId])),
-      engagement: 0.1 + rng() * 0.4,
+      engagement: 0.2 + rng() * 0.3,
     };
     const id = newId("m");
-    const built = buildMember(rng, today, id, createPerson(rng, nextId), draft, codes);
+    const built = buildMember(rng, today, id, createPerson(rng, nextId, names), draft, codes);
     if (!built) continue;
     members.push(built.member);
     payments.push(...built.payments);
@@ -161,7 +169,6 @@ export function createSeedState(today: Day): DemoState {
   for (let index = 0; index < 13; index++) {
     const member = active[Math.floor(rng() * active.length)];
     if (!member) continue;
-    member.engagement = 0.08 + rng() * 0.1;
     member.lastVisitDay = Math.max(member.joinedDay, today - intBetween(rng, 10, 26));
   }
 
@@ -169,7 +176,7 @@ export function createSeedState(today: Day): DemoState {
   for (let day = today - 75; day <= today; day++) {
     const count = pickWeighted(rng, [[0, 25], [1, 35], [2, 25], [3, 15]]);
     for (let n = 0; n < count; n++) {
-      const person = createPerson(rng, nextId);
+      const person = createPerson(rng, nextId, names);
       const id = newId("l");
       const stage = stageForLeadAge(rng, today - day);
       const hadTrial =
@@ -217,6 +224,13 @@ export function createSeedState(today: Day): DemoState {
         }
       }
       leads.push(lead);
+    }
+  }
+
+  // Anyone already 10+ days away has drifted: they rarely come back on their own.
+  for (const member of members) {
+    if (member.status === "active" && today - member.lastVisitDay >= AT_RISK_DAYS) {
+      member.engagement = driftingEngagement(rng());
     }
   }
 

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
 import { ActivityFeed } from "../../components/ActivityFeed";
 import { BarList } from "../../components/charts/BarList";
 import { ColumnStrip } from "../../components/charts/ColumnStrip";
@@ -17,6 +18,7 @@ import {
   revenueInMonth,
   trialConversion,
   visitsForLastDays,
+  winbackStats,
 } from "../../state/selectors";
 import { useDemoStore } from "../../state/store";
 
@@ -46,6 +48,7 @@ export function Dashboard() {
       atRisk,
       atRiskValue: atRisk.reduce((sum, entry) => sum + entry.monthlyValue, 0),
       sources: leadSourceCounts(demo, 30),
+      winback: winbackStats(demo),
       visits: visitsForLastDays(demo, 14),
     };
   }, [demo]);
@@ -76,6 +79,12 @@ export function Dashboard() {
           <p className={lastAdvance.lapsed ? "text-brand-red" : ""}>
             <span className="font-semibold">{lastAdvance.lapsed}</span> did not renew
           </p>
+          {lastAdvance.winbackSent + lastAdvance.recovered > 0 && (
+            <p className="text-good">
+              Win-back: <span className="font-semibold">{lastAdvance.recovered}</span> came back ·{" "}
+              {formatNaira(lastAdvance.recoveredValue)}/mo kept
+            </p>
+          )}
         </section>
       )}
 
@@ -101,9 +110,14 @@ export function Dashboard() {
           label="Members at risk of leaving"
           value={String(metrics.atRisk.length)}
           detail={
-            <span className="text-brand-red">
-              {formatNaira(metrics.atRiskValue)}/month at risk · no visit in 10+ days
-            </span>
+            <>
+              <span className="text-brand-red">
+                {formatNaira(metrics.atRiskValue)}/month at risk · no visit in 10+ days
+              </span>
+              <Link to="/app/automations" className="mt-1 block font-semibold text-brand-blue underline underline-offset-4">
+                {demo.winbackEnabled ? `Win-back on · ${metrics.winback.recovered} came back` : "Switch on win-back"}
+              </Link>
+            </>
           }
         />
       </section>
@@ -139,12 +153,17 @@ export function Dashboard() {
                       {planById(member.planId).name} · {member.area} · worth {formatNaira(monthlyValue)}/mo
                     </p>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-red-soft px-2.5 py-1 text-xs font-semibold text-brand-red">
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-red-soft px-2.5 py-1 text-xs font-semibold text-brand-red">
                     <svg aria-hidden="true" viewBox="0 0 12 12" className="size-3" fill="none" stroke="currentColor" strokeWidth="1.6">
                       <circle cx="6" cy="6" r="4.5" />
                       <path d="M6 3.8V6l1.4 1" strokeLinecap="round" />
                     </svg>
                     {daysAway} days away
+                  </span>
+                  {member.winback && (
+                    <span className="text-xs font-medium text-brand-blue">Win-back message {member.winback.step} sent</span>
+                  )}
                   </span>
                 </li>
               ))}

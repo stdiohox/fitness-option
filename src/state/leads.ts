@@ -3,7 +3,7 @@ import { formatNaira } from "../lib/format";
 import { createRng } from "../lib/rng";
 import { AREAS, planById } from "../data/sample";
 import { SEED, createCheckInCode, periodDays } from "./seed";
-import { pushEvent } from "./simulate";
+import { pushEvent } from "./events";
 import type { DemoState, LeadStage } from "./types";
 
 export const STAGES: readonly { id: LeadStage; label: string; hint: string }[] = [
