@@ -9,6 +9,7 @@ const AppShell = lazy(() => import("./components/AppShell").then((module) => ({ 
 const Dashboard = lazy(() => import("./pages/app/Dashboard").then((module) => ({ default: module.Dashboard })));
 const Pipeline = lazy(() => import("./pages/app/Pipeline").then((module) => ({ default: module.Pipeline })));
 const Enquiries = lazy(() => import("./pages/app/Enquiries").then((module) => ({ default: module.Enquiries })));
+const CheckIn = lazy(() => import("./pages/app/CheckIn").then((module) => ({ default: module.CheckIn })));
 const Automations = lazy(() => import("./pages/app/Automations").then((module) => ({ default: module.Automations })));
 
 const OWNER_NAV: NavItem[] = [
@@ -16,6 +17,7 @@ const OWNER_NAV: NavItem[] = [
   { to: "/app/pipeline", label: "Pipeline" },
   { to: "/app/enquiries", label: "WhatsApp agent" },
   { to: "/app/automations", label: "Win-back automation" },
+  { to: "/app/checkin", label: "Front-desk check-in" },
 ];
 
 function Loading() {
@@ -39,6 +41,7 @@ export function App() {
               <Route path="pipeline" element={<Pipeline />} />
               <Route path="enquiries" element={<Enquiries />} />
               <Route path="automations" element={<Automations />} />
+              <Route path="checkin" element={<CheckIn />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
