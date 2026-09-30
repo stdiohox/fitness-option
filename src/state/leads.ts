@@ -1,3 +1,4 @@
+import { formatDay } from "../lib/dates";
 import { formatNaira } from "../lib/format";
 import { createRng } from "../lib/rng";
 import { AREAS, planById } from "../data/sample";
@@ -8,7 +9,7 @@ import type { DemoState, LeadStage } from "./types";
 export const STAGES: readonly { id: LeadStage; label: string; hint: string }[] = [
   { id: "new", label: "New lead", hint: "Reply within the hour" },
   { id: "contacted", label: "Contacted", hint: "Offer a free trial" },
-  { id: "trial_booked", label: "Trial booked", hint: "Reminder goes out the day before" },
+  { id: "trial_booked", label: "Trial booked", hint: "Confirm the day before" },
   { id: "trial_done", label: "Trial done", hint: "Ask them to join today" },
   { id: "won", label: "Member", hint: "Welcome to the family" },
   { id: "lost", label: "Lost", hint: "Re-engage in 30 days" },
@@ -16,6 +17,37 @@ export const STAGES: readonly { id: LeadStage; label: string; hint: string }[] =
 
 export function stageLabel(stage: LeadStage): string {
   return STAGES.find((candidate) => candidate.id === stage)?.label ?? stage;
+}
+
+export interface ChatBooking {
+  firstName: string;
+  daysFromToday: number;
+  time: string;
+  interest: string;
+}
+
+/** A trial booked by the WhatsApp agent lands in the pipeline as a new lead at "Trial booked". */
+export function addChatBooking(state: DemoState, booking: ChatBooking): DemoState {
+  const draft = structuredClone(state);
+  const trialDay = draft.today + booking.daysFromToday;
+  draft.leads.push({
+    id: `l${draft.nextId++}`,
+    name: booking.firstName,
+    phone: "WhatsApp chat",
+    email: "",
+    source: "WhatsApp",
+    interest: booking.interest || "General fitness",
+    stage: "trial_booked",
+    createdDay: draft.today,
+    stageDay: draft.today,
+    trialDay,
+  });
+  pushEvent(
+    draft,
+    `${booking.firstName} booked a free trial for ${formatDay(trialDay)}${booking.time ? `, ${booking.time}` : ""} — via the WhatsApp agent`,
+    "good",
+  );
+  return draft;
 }
 
 /** Days until a newly booked trial, when the owner books one from the board. */

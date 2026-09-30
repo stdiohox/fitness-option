@@ -12,7 +12,7 @@ import {
 } from "../data/sample";
 import type { DemoState, Lead, LeadStage, Member, Payment } from "./types";
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 export const SEED = 20260930;
 export const DAYS_PER_MONTH = 30;
 /** History older than this is not needed by any screen, so it is not generated. */
@@ -187,7 +187,11 @@ export function createSeedState(today: Day): DemoState {
         interest: pick(rng, INTERESTS),
         stage,
         createdDay: day,
-        stageDay: Math.min(today, trialDay ?? day + intBetween(rng, 0, 2)),
+        // A booked trial is still ahead, so the lead moved to that stage some time after it came in.
+        stageDay: Math.min(
+          today,
+          stage === "trial_booked" ? day + intBetween(rng, 0, 2) : (trialDay ?? day + intBetween(rng, 0, 2)),
+        ),
         trialDay,
       };
 
@@ -236,6 +240,9 @@ export function createSeedState(today: Day): DemoState {
     payments,
     visitsByDay,
     checkIns: [],
+    winbackEnabled: false,
+    messages: [],
+    recoveries: [],
     events: [
       {
         id: newId("e"),

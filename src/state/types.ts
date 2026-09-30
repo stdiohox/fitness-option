@@ -34,6 +34,30 @@ export interface Member {
   status: "active" | "lapsed";
   /** Front-desk check-in code. */
   code: string;
+  /** Set while a win-back message is waiting for the member to come back. */
+  winback?: { step: WinbackStep; sentDay: Day };
+}
+
+export type WinbackStep = 1 | 2;
+
+export interface OutboundMessage {
+  id: string;
+  day: Day;
+  step: WinbackStep;
+  memberId: string;
+  memberName: string;
+  daysAway: number;
+  whatsapp: string;
+  emailSubject: string;
+  emailBody: string;
+  /** Day the member came back after this message, if they did. */
+  returnedDay?: Day;
+}
+
+export interface Recovery {
+  memberId: string;
+  day: Day;
+  monthlyValue: number;
 }
 
 export interface Payment {
@@ -71,5 +95,8 @@ export interface DemoState {
   visitsByDay: Record<number, number>;
   checkIns: CheckIn[];
   events: ActivityEvent[];
+  winbackEnabled: boolean;
+  messages: OutboundMessage[];
+  recoveries: Recovery[];
   nextId: number;
 }

@@ -21,7 +21,7 @@ const OPEN_STAGES: readonly LeadStage[] = STAGES.map((stage) => stage.id).filter
 
 function stageTimeLabel(lead: Lead, daysInStage: number): string {
   if (lead.stage === "new" && daysInStage >= 1) return `Waiting for a reply · ${daysInStage} day${daysInStage === 1 ? "" : "s"}`;
-  if (daysInStage === 0) return lead.stage === "new" ? "Added today" : "Moved here today";
+  if (daysInStage === 0) return lead.createdDay === lead.stageDay ? "Added today" : "Moved here today";
   return `${daysInStage} day${daysInStage === 1 ? "" : "s"} in this stage`;
 }
 
@@ -105,7 +105,9 @@ export function Pipeline() {
       if (isClosed(lead.stage) && lead.stageDay < demo.today - CLOSED_WINDOW_DAYS) continue;
       byStage.get(lead.stage)?.push(lead);
     }
-    for (const leads of byStage.values()) leads.sort((a, b) => b.stageDay - a.stageDay);
+    for (const leads of byStage.values()) {
+      leads.sort((a, b) => b.stageDay - a.stageDay || b.createdDay - a.createdDay);
+    }
     return byStage;
   }, [demo.leads, demo.today]);
 

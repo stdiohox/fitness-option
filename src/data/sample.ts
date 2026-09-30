@@ -1,7 +1,7 @@
 // SAMPLE DATA. Invented for the demo; must be labelled "Sample data" wherever it is shown.
 // The one exception is the monthly price, which is a verified fact (see facts.ts).
 
-import { GYM } from "./facts";
+import { GYM } from "./facts.js";
 
 export type PlanId = "monthly" | "quarterly" | "annual" | "classes";
 

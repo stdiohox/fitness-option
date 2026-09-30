@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
 import { dayFromDate } from "../lib/dates";
-import { moveLead } from "./leads";
+import { addChatBooking, moveLead, type ChatBooking } from "./leads";
 import { STATE_VERSION, createSeedState } from "./seed";
 import { advanceDays, type AdvanceSummary } from "./simulate";
 import type { DemoState, LeadStage } from "./types";
@@ -15,7 +15,8 @@ interface StoreState {
 type Action =
   | { type: "advance"; days: number }
   | { type: "reset" }
-  | { type: "moveLead"; leadId: string; stage: LeadStage };
+  | { type: "moveLead"; leadId: string; stage: LeadStage }
+  | { type: "chatBooking"; booking: ChatBooking };
 
 function reducer(store: StoreState, action: Action): StoreState {
   switch (action.type) {
@@ -29,6 +30,8 @@ function reducer(store: StoreState, action: Action): StoreState {
       const demo = moveLead(store.demo, action.leadId, action.stage);
       return demo === store.demo ? store : { ...store, demo };
     }
+    case "chatBooking":
+      return { ...store, demo: addChatBooking(store.demo, action.booking) };
   }
 }
 
@@ -45,6 +48,9 @@ function isDemoState(value: unknown): value is DemoState {
     Array.isArray(candidate.payments) &&
     Array.isArray(candidate.checkIns) &&
     Array.isArray(candidate.events) &&
+    Array.isArray(candidate.messages) &&
+    Array.isArray(candidate.recoveries) &&
+    typeof candidate.winbackEnabled === "boolean" &&
     typeof candidate.visitsByDay === "object" &&
     candidate.visitsByDay !== null
   );
@@ -77,6 +83,7 @@ interface StoreActions {
   advance: (days: number) => void;
   reset: () => void;
   moveLead: (leadId: string, stage: LeadStage) => void;
+  bookFromChat: (booking: ChatBooking) => void;
 }
 
 interface StoreValue extends StoreActions {
@@ -100,6 +107,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       advance: (days) => dispatch({ type: "advance", days }),
       reset: () => dispatch({ type: "reset" }),
       moveLead: (leadId, stage) => dispatch({ type: "moveLead", leadId, stage }),
+      bookFromChat: (booking) => dispatch({ type: "chatBooking", booking }),
     }),
     [],
   );
