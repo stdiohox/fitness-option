@@ -1,9 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { AppShell, type NavItem } from "./components/AppShell";
 import { Dashboard } from "./pages/app/Dashboard";
+import { Pipeline } from "./pages/app/Pipeline";
 import { DemoStoreProvider } from "./state/store";
 
-const OWNER_NAV: NavItem[] = [{ to: "/app/dashboard", label: "Dashboard" }];
+const OWNER_NAV: NavItem[] = [
+  { to: "/app/dashboard", label: "Dashboard" },
+  { to: "/app/pipeline", label: "Pipeline" },
+];
 
 export function App() {
   return (
@@ -13,6 +17,7 @@ export function App() {
           <Route path="/app" element={<AppShell nav={OWNER_NAV} />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="pipeline" element={<Pipeline />} />
           </Route>
           <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
         </Routes>

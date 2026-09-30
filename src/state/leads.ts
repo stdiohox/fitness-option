@@ -33,9 +33,18 @@ export function moveLead(state: DemoState, leadId: string, stage: LeadStage): De
   lead.stage = stage;
   lead.stageDay = draft.today;
 
+  // Keep trialDay meaning "a trial that did or will happen", because trial conversion counts it.
+  const trialStillAhead = lead.trialDay !== undefined && lead.trialDay >= draft.today;
   if (stage === "trial_booked") {
-    lead.trialDay = draft.today + DEFAULT_TRIAL_LEAD_TIME;
+    if (!trialStillAhead) lead.trialDay = draft.today + DEFAULT_TRIAL_LEAD_TIME;
     pushEvent(draft, `${lead.name} booked a free trial`, "neutral");
+  } else if (stage === "trial_done") {
+    lead.trialDay = Math.min(lead.trialDay ?? draft.today, draft.today);
+  } else if (stage === "won") {
+    // Joined before the booked trial: count the trial as today so the KPI doesn't shift later.
+    if (trialStillAhead) lead.trialDay = draft.today;
+  } else if (trialStillAhead) {
+    lead.trialDay = undefined;
   }
 
   if (stage === "won") {
